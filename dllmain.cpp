@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <sys/stat.h>
 
 int APIENTRY DllMain(HMODULE hDLL, DWORD Reason, LPVOID Reserved)
 {
@@ -8,6 +9,7 @@ int APIENTRY DllMain(HMODULE hDLL, DWORD Reason, LPVOID Reserved)
 		{
 			char ini_path[MAX_PATH] = { 0 };
 			char * temp_path;
+			struct stat buffer;
 			/* get our current path so that we can load stuff from our settings */
 			GetModuleFileNameA(hDLL, ini_path, MAX_PATH);
 			temp_path = strrchr(ini_path, '\\');
@@ -17,7 +19,8 @@ int APIENTRY DllMain(HMODULE hDLL, DWORD Reason, LPVOID Reserved)
 			GetPrivateProfileStringA("bootstrap", "dll", NULL, bootstrap_dll, MAX_PATH, ini_path);
 			/* at this point we should be in process. we should load our bootstrapped dll here and unload ourselves */
 			if (bootstrap_dll != NULL && bootstrap_dll[0] != NULL)
-				LoadLibraryA(bootstrap_dll);
+				if (stat(bootstrap_dll, &buffer) == 0)
+					LoadLibraryA(bootstrap_dll);
 		}
 		break;
 	case DLL_PROCESS_DETACH:
